@@ -4,17 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
     <title>안전 구조대 베이스 캠프</title>
-    <!-- 외부 라이브러리 및 폰트 -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- CSS 스타일 -->
     <style>
         :root {
-            /* 딥 네이비 컬러로 변경 */
             --primary-color: #1A237E; 
             --primary-hover: #000051; 
             --text-main: #333333;
-            --text-light: #1A237E; /* 서브 텍스트도 네이비 톤으로 맞춤 */
             --white: #FFFFFF;
             --o-color: #FFB3BA;
             --x-color: #BAE1FF;
@@ -23,226 +20,163 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #FDFDF8; color: var(--text-main); overflow: hidden; word-break: keep-all; word-wrap: break-word; }
-        #app-container { width: 100vw; height: 100vh; position: relative; display: flex; justify-content: center; align-items: center; }
         
-        .screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; flex-direction: column; padding: 20px; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        /* 1. 전체 화면 스크롤 금지 (게임 화면 최적화) */
+        body, html { 
+            font-family: 'Noto Sans KR', sans-serif; background-color: #FDFDF8;
+            overflow: hidden !important; width: 100vw; height: 100vh; 
+        }
+        #app-container { width: 100vw; height: 100vh; position: relative; display: flex; justify-content: center; align-items: center; }
+        .screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; flex-direction: column; padding: 10px; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .screen.active { display: flex; opacity: 1; }
 
-        /* Home Screen (배경 이미지 적용 부분) */
-        #screen-home {
-            background: url('background.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            display: none;
-            justify-content: center;
-            align-items: center;
+        /* 2. 홈 화면 설정 (스크롤 허용) */
+        #screen-home { 
+            background-image: url('background.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;
+            display: none; justify-content: center; align-items: center; overflow-y: auto !important; height: 100vh !important;
         }
         #screen-home.active { display: flex; }
-
-        .home-content { display: flex; justify-content: center; align-items: center; gap: 30px; width: 100%; }
+        .home-content { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px; width: 100%; padding: 40px 0; }
         
-        .menu-circle { width: 320px; height: 320px; background: rgba(255, 255, 255, 0.85); border: 4px solid var(--primary-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-shadow: 0 8px 32px rgba(26, 35, 126, 0.3); backdrop-filter: blur(4px); transition: transform 0.2s ease; }
-        .menu-circle:hover { transform: scale(1.05); }
-        .menu-circle h2 { font-size: 1.6rem; margin-bottom: 5px; color: var(--primary-hover); font-weight: 900; }
-        .menu-circle .subtitle { font-weight: bold; color: var(--primary-color); margin-bottom: 10px; }
-        .menu-circle .desc { font-size: 0.9rem; color: var(--primary-color); margin-bottom: 20px; opacity: 0.8; }
-        .btn-group-vertical { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .menu-circle { 
+            width: 300px; height: 300px; background: rgba(255, 255, 255, 0.95); border: 5px solid var(--primary-color); 
+            border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            text-align: center; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.2s ease; 
+        }
+        .menu-circle h2 { font-size: 2.2rem; color: var(--primary-color); font-weight: 900; margin-bottom: 10px; letter-spacing: -0.05em; text-shadow: none; }
+        .menu-circle .emoji { font-size: 3rem; margin-bottom: 10px; }
+        .menu-circle p { font-size: 1.1rem; color: #333; font-weight: 700; margin-bottom: 15px; }
         
-        /* Buttons */
-        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; justify-content: center; align-items: center; font-size: 1rem; }
+        .btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 1rem; }
         .btn-primary { background-color: var(--primary-color); color: var(--white); }
-        .btn-primary:hover { background-color: var(--primary-hover); transform: scale(1.05); }
-        .btn-outline { background-color: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
-        .btn-outline:hover { background-color: var(--primary-color); color: var(--white); }
-        .btn-ox { transition: all 0.2s; }
-        .btn-ox:not(:disabled):hover { opacity: 0.8; transform: scale(1.05); }
-        .btn-ox-race { transition: background-color 0.2s; }
-        .btn-ox-race#btn-ox-o:not(:disabled):hover, .btn-ox-race#btn-ox-o.ai-hover { background-color: #FF3B30 !important; }
-        .btn-ox-race#btn-ox-x:not(:disabled):hover, .btn-ox-race#btn-ox-x.ai-hover { background-color: #007AFF !important; }
-
-        /* Modal */
+        .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
+        
         .hidden { display: none !important; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: var(--white); padding: 30px; border-radius: 20px; max-width: 900px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center; border: 4px solid var(--primary-color); }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; border: 4px solid var(--primary-color); text-align: center; }
 
-        /* Progress Bar */
+        /* 프로그레스 바 */
         .progress-bar-container { flex: 1; height: 12px; background-color: #e0e0e0; border-radius: 6px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background-color: var(--primary-color); transition: width 1s linear, background-color 0.3s; }
-        .progress-bar-fill.fast { transition: width 0.3s ease-out; }
-
-        /* Tabs */
+        
+        /* 탭 및 공통 효과 */
         .tab-header { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 10px; cursor: pointer; text-align: center; font-weight: bold; color: gray; }
         .tab-btn.active { border-bottom: 4px solid var(--primary-color); color: var(--primary-color); }
         .tab-content { display: none; text-align: left; max-height: 40vh; overflow-y: auto; }
         .tab-content.active { display: block; }
-        ul { padding-left: 20px; }
-        li { margin-bottom: 15px; }
+        ul { padding-left: 20px; } li { margin-bottom: 15px; }
 
-        /* ================= 애니메이션 이펙트 (귀여운 재난) ================= */
-        /* 1. 지진 (화면 흔들림 + 돌/먼지 떨어짐) */
-        @keyframes severeShake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-4px, 4px) rotate(-1deg); }
-            40% { transform: translate(4px, -4px) rotate(1deg); }
-            60% { transform: translate(-4px, -4px) rotate(-1deg); }
-            80% { transform: translate(4px, 4px) rotate(1deg); }
+        /* ========================================================
+           3. O/X 퀴즈 화면 자동 맞춤 (세로 스크롤 완전 삭제)
+           ======================================================== */
+        #screen-quiz { overflow: hidden !important; padding: 10px !important; box-sizing: border-box; }
+        #quiz-container { display: flex; flex-direction: column; height: 100%; max-height: 100vh; justify-content: space-around; }
+        
+        .quiz-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        /* 퀴즈 글자 크기를 기기 높이(vh)에 비례해서 자동 조절 */
+        .quiz-body h1 { font-size: clamp(1.1rem, 4vh, 2rem) !important; margin-bottom: clamp(10px, 3vh, 30px) !important; padding: 0 10px; line-height: 1.3; }
+        
+        /* O/X 버튼을 가로로 나란히 배치하여 세로 공간 절약 */
+        .ox-buttons { display: flex; flex-direction: row !important; gap: 15px !important; max-width: 600px; width: 100%; margin: 0 auto; }
+        .ox-buttons button { flex: 1; padding: clamp(15px, 4vh, 25px) !important; font-size: clamp(1.5rem, 6vh, 2.5rem) !important; font-weight: 900; border-radius: 15px; cursor: pointer; border: none; transition: all 0.2s; }
+        
+        #quiz-result-area { margin-top: clamp(10px, 2vh, 20px); }
+        #quiz-result-area p { font-size: clamp(0.9rem, 3vh, 1.3rem) !important; padding: 10px !important; margin: 0 !important; line-height: 1.3; }
+
+        /* 퀴즈버튼 클릭/호버 시 쨍한 색으로 변경 */
+        .btn-o { background-color: var(--o-color); color: white; }
+        .btn-x { background-color: var(--x-color); color: white; }
+        .btn-o:not(:disabled):hover, .btn-o:not(:disabled):active { background-color: #FF3B30 !important; transform: scale(1.05); }
+        .btn-x:not(:disabled):hover, .btn-x:not(:disabled):active { background-color: #007AFF !important; transform: scale(1.05); }
+
+        /* ========================================================
+           4. 구조 레이스 화면 자동 맞춤 (오른쪽 카드 잘림 해결)
+           ======================================================== */
+        #screen-race { overflow: hidden !important; }
+        #race-container > div { padding: 5px !important; gap: 10px !important; height: 100% !important; max-height: 100vh !important; align-items: stretch !important; flex-wrap: nowrap !important; }
+        
+        #board-area { height: 100% !important; max-height: 100vh !important; display: flex; flex-direction: column; justify-content: center; flex: 1.5; }
+        #board-grid { height: 100%; max-height: calc(100vh - 40px); aspect-ratio: 1/1; margin: 0 auto; }
+        
+        /* 오른쪽 상태창 사이즈 고정 및 내부 글자 자동 축소 */
+        #ui-area { flex: 1; min-width: 250px; max-width: 350px; height: 100% !important; display: flex; flex-direction: column; }
+        #card-area { padding: clamp(5px, 2vh, 15px) !important; display: flex; flex-direction: column; justify-content: center; }
+        
+        /* 카드 내부 텍스트를 기기 높이(vh)에 따라 대폭 줄임 */
+        .race-quiz-q { font-size: clamp(0.9rem, 3.5vh, 1.4rem) !important; margin-bottom: clamp(5px, 2vh, 15px) !important; font-weight: bold; line-height: 1.3; }
+        #card-area h3 { font-size: clamp(1rem, 4vh, 1.5rem) !important; margin-bottom: clamp(5px, 1.5vh, 15px) !important; }
+        #card-area p { font-size: clamp(0.85rem, 3vh, 1.1rem) !important; margin-bottom: clamp(5px, 1.5vh, 15px) !important; line-height: 1.3; }
+        
+        /* 레이스 O/X 버튼 크기 자동 축소 및 색상 쨍하게 */
+        .btn-ox-race { padding: clamp(8px, 2.5vh, 20px) !important; font-size: clamp(1.2rem, 5vh, 2rem) !important; cursor: pointer; border: none; font-weight: 900; transition: background-color 0.2s; }
+        .btn-ox-race#btn-ox-o:not(:disabled):hover, .btn-ox-race#btn-ox-o.ai-hover { background-color: #FF3B30 !important; }
+        .btn-ox-race#btn-ox-x:not(:disabled):hover, .btn-ox-race#btn-ox-x.ai-hover { background-color: #007AFF !important; }
+
+        /* 세로 모드(태블릿/스마트폰 좁은 화면)일 때 위아래 배치로 전환 */
+        @media (max-aspect-ratio: 1/1) {
+            #race-container > div { flex-direction: column !important; }
+            #ui-area { width: 100% !important; max-width: none !important; height: auto !important; flex: 1; }
+            #board-area { width: 100% !important; height: auto !important; flex: 1.5; }
         }
+
+        /* 애니메이션 이펙트 */
+        @keyframes severeShake { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 20% { transform: translate(-4px, 4px) rotate(-1deg); } 40% { transform: translate(4px, -4px) rotate(1deg); } 60% { transform: translate(-4px, -4px) rotate(-1deg); } 80% { transform: translate(4px, 4px) rotate(1deg); } }
         .fx-earthquake { animation: severeShake 0.15s infinite; }
         .rock-emoji { position: absolute; font-size: 2.5rem; animation: fallDown 1.5s linear forwards; z-index: 999; }
         .dust-emoji { position: absolute; font-size: 2rem; animation: floatUp 1.5s ease-out forwards; z-index: 998; opacity: 0.8; }
         @keyframes fallDown { 0% { top: -50px; transform: rotate(0deg); } 100% { top: 110vh; transform: rotate(360deg); } }
         @keyframes floatUp { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(2); } }
-
-        /* 2. 해일 (파도 이모지 슬라이드) */
         .wave-container { position: fixed; top: 0; left: -100vw; width: 200vw; height: 100vh; pointer-events: none; z-index: 999; display: flex; align-items: flex-end; justify-content: space-around; font-size: 10rem; animation: waveSurge 3s ease-in-out forwards; overflow: hidden; }
         .wave-container div { margin-bottom: -30px; }
         @keyframes waveSurge { 0% { transform: translateX(0); } 100% { transform: translateX(120vw); } }
-
-        /* 3. 화산 (큰 화산 폭발 + 화산재) */
         .volcano-container { position: fixed; bottom: -20vh; left: 50%; transform: translateX(-50%); z-index: 999; text-align: center; pointer-events: none; animation: eruptPop 3s ease-out forwards; }
         @keyframes eruptPop { 0% { bottom: -50vh; } 15% { bottom: -20px; } 85% { bottom: -20px; opacity: 1; } 100% { bottom: -50vh; opacity: 0; } }
         .ash-emoji { position: absolute; font-size: 2.5rem; animation: ashFly 2.5s ease-out forwards; }
         @keyframes ashFly { 0% { top: 0; left: 50%; opacity: 1; transform: scale(1); } 100% { top: -100vh; left: calc(50% + var(--dx)); opacity: 0; transform: scale(2.5); } }
-
-        @media (max-width: 1024px) { .home-content { flex-direction: row; transform: scale(0.8); } }
-        @media (max-width: 768px) { .home-content { transform: scale(0.6); } #ui-area { min-width: 300px; } }
-/* ========================================= */
-    /* 📱 모든 기기 반응형(Responsive) 자동 맞춤 설정 */
-    /* ========================================= */
-    
-    /* 1. 화면이 작을 때 내용이 잘리지 않고 스크롤이 생기도록 허용 */
-    body { overflow-y: auto !important; overflow-x: hidden !important; }
-    #app-container { height: auto !important; min-height: 100vh; }
-    .screen { overflow-y: auto !important; height: auto !important; min-height: 100vh; }
-
-    /* 2. 가로 공간이 부족하면 동그라미 메뉴판이 자동으로 줄 바꿈되도록 설정 */
-    .home-content { flex-wrap: wrap !important; padding: 40px 0; }
-
-    /* 3. 태블릿 및 폰 가로 모드 (화면 높이나 너비가 좁을 때 메뉴판 크기 자동 축소) */
-    @media (max-width: 1024px), (max-height: 700px) {
-        .menu-circle { width: 240px !important; height: 240px !important; padding: 15px !important; border-width: 4px !important; }
-        .menu-circle h2 { font-size: 1.8rem !important; margin-bottom: 10px !important; }
-        .menu-circle .emoji { font-size: 2.5rem !important; margin-bottom: 5px !important; }
-        .menu-circle p { font-size: 1rem !important; margin-bottom: 10px !important; }
-    }
-
-    /* 4. 일반 스마트폰 세로 모드 (가장 좁은 화면) */
-    @media (max-width: 768px), (max-height: 500px) {
-        .menu-circle { width: 200px !important; height: 200px !important; padding: 10px !important; border-width: 3px !important; }
-        .menu-circle h2 { font-size: 1.4rem !important; margin-bottom: 5px !important; }
-        .menu-circle .emoji { font-size: 1.8rem !important; margin-bottom: 5px !important; }
-        .menu-circle p { font-size: 0.85rem !important; margin-bottom: 10px !important; }
-        .btn { padding: 8px 15px !important; font-size: 0.9rem !important; }
-    }
-/* 5. 가로 모드 (스마트폰 눕혔을 때 오른쪽 카드 잘림 방지) */
-    @media (max-height: 600px) {
-        /* 레이스 전체 여백 줄이기 */
-        #race-container > div {
-            padding: 5px !important;
-            gap: 10px !important;
-        }
-        /* 보드판 높이 최적화 */
-        #board-area {
-            height: calc(100vh - 15px) !important;
-        }
-        /* 오른쪽 UI 영역: 너비를 줄이고, 넘치면 스크롤 가능하게 처리 */
-        #ui-area {
-            width: 280px !important;
-            height: calc(100vh - 15px) !important;
-            overflow-y: auto !important;
-        }
-        /* 카드 내부 패딩 및 마진 축소 */
-        #card-area {
-            padding: 10px !important;
-        }
-        /* 구조대원 이름표 크기 축소 */
-        #p1-status, #p2-status {
-            height: 35px !important;
-        }
-        #p1-status h3, #p2-status h3 {
-            font-size: 0.9rem !important;
-        }
-        /* O/X 버튼 크기 대폭 축소하여 화면에 쏙 들어가게 조절 */
-        .btn-ox-race {
-            padding: 10px !important;
-            font-size: 1.5rem !important;
-        }
-        /* 퀴즈 문제 텍스트 크기 및 여백 조절 */
-        #card-area div[style*="font-size: 1.2rem"] {
-            font-size: 0.95rem !important;
-            margin-bottom: 10px !important;
-            line-height: 1.2 !important;
-        }
-    }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <!-- 화면 1: 초기 화면 (배경 이미지 적용 완료, 타이틀 제거) -->
+        <!-- 홈 화면 -->
         <section id="screen-home" class="screen active">
             <div class="home-content">
                 <div class="menu-circle">
+                    <div class="emoji">🛡️</div>
                     <h2>안전 훈련소</h2>
-                    <p class="subtitle">O/X 퀴즈</p>
-                    <p class="desc">구조 대원이 되기 위한 안전 지식 훈련하기</p>
-                    <div class="btn-group-vertical" style="width: 80%;">
+                    <p>O/X 퀴즈 훈련</p>
+                    <div class="btn-group-vertical" style="display:flex; flex-direction:column; gap:10px; width:80%;">
                         <button class="btn btn-outline" onclick="app.showModal('quiz-desc')">게임 설명</button>
-                        <button class="btn btn-primary" onclick="app.startQuiz()">게임 시작</button>
+                        <button class="btn btn-primary" onclick="app.startQuiz()">시작하기</button>
                     </div>
                 </div>
-
-                <div class="menu-circle highlight">
-                    <h2>구조 레이스</h2>
-                    <p class="subtitle">대피로를 연결하라!</p>
-                    <p class="desc">시민을 구하기 위한 실전 구조 훈련!</p>
-                    <div class="btn-group-vertical" style="width: 80%;">
-                        <button class="btn btn-outline" onclick="app.showModal('race-desc', false)">게임 설명</button>
-                        <button class="btn btn-primary" onclick="app.showModal('race-mode-select')">게임 시작</button>
-                    </div>
-                </div>
-
                 <div class="menu-circle">
+                    <div class="emoji">🏎️</div>
+                    <h2>구조 레이스</h2>
+                    <p>대피로 연결 대결</p>
+                    <div class="btn-group-vertical" style="display:flex; flex-direction:column; gap:10px; width:80%;">
+                        <button class="btn btn-outline" onclick="app.showModal('race-desc')">게임 설명</button>
+                        <button class="btn btn-primary" onclick="app.showModal('race-mode-select')">시작하기</button>
+                    </div>
+                </div>
+                <div class="menu-circle">
+                    <div class="emoji">📚</div>
                     <h2>작전 정보실</h2>
-                    <p class="subtitle">관련 사이트</p>
-                    <p class="desc">구조 작전에 꼭 필요한 필수 정보 자료</p>
-                    <div class="btn-group-vertical" style="width: 80%;">
-                        <a href="https://www.safekorea.go.kr/" target="_blank" class="btn btn-outline">국민안전24</a>
-                        <a href="https://www.youtube.com/@y_princess0106" target="_blank" class="btn btn-outline">안전 관련 영상</a>
+                    <p>안전 필수 자료</p>
+                    <div class="btn-group-vertical" style="display:flex; flex-direction:column; gap:10px; width:80%;">
+                        <a href="https://www.safekorea.go.kr/" target="_blank" class="btn btn-outline" style="text-decoration:none;">국민안전24</a>
+                        <a href="https://www.youtube.com/@y_princess0106" target="_blank" class="btn btn-outline" style="text-decoration:none;">안전 영상</a>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 화면 2: 안전 훈련소 (O/X 퀴즈) -->
-        <section id="screen-quiz" class="screen">
-            <div id="quiz-container"></div>
-        </section>
-
-        <!-- 화면 3: 구조 레이스 -->
-        <section id="screen-race" class="screen">
-            <div id="race-container"></div>
-        </section>
-
-        <!-- 공통 모달 -->
-        <div id="modal-overlay" class="hidden">
-            <div id="modal-content" class="modal-box"></div>
-        </div>
+        <section id="screen-quiz" class="screen"><div id="quiz-container"></div></section>
+        <section id="screen-race" class="screen"><div id="race-container"></div></section>
+        <div id="modal-overlay" class="hidden"><div id="modal-content" class="modal-box"></div></div>
     </div>
-
-    <!-- JS 스크립트 -->
+    
     <script>
-        const GEMINI_API_KEY = "여기에_발급받은_API_키를_넣을_예정입니다";
-        
-        async function callGeminiAPI(prompt) {
-            console.log("Gemini API 호출 대기 중...");
-        }
-
-        // ==========================================
-        // 1. data.js 내용
-        // ==========================================
         const quizData = [
             { q: "탁자 밑에 대피할 때, 탁자 다리는 3개보다는 4개 이상이 더 안전하다.", a: "O", exp: "탁자 밑에 대피할 때, 탁자 다리의 개수가 많을수록 더 안전해요!" },
             { q: "탁자 밑에 대피할 때, 탁자 다리가 높을수록 더 안전하다.", a: "X", exp: "탁자 밑에 대피할 때, 탁자 다리가 낮을수록 더 안전해요!" },
@@ -276,9 +210,6 @@
             { q: "재난 상황에 대비해 가족들과 미리 비상 연락망을 작성해야 한다.", a: "O", exp: "가족들과 가족 연락처, 우리 집에서 가까운 대피 장소, 약속 장소 등을 미리 이야기하고 비상 연락망을 작성해야 해요!" }
         ];
 
-        // ==========================================
-        // 2. main.js 내용
-        // ==========================================
         const app = {
             currentScreen: 'home',
             init() { console.log('Safety Rescue Base Camp Initialized'); },
@@ -292,56 +223,29 @@
                 const content = document.getElementById('modal-content');
                 let html = '';
                 if (type === 'quiz-desc') {
-                    html = `
-                        <h2 style="color:var(--primary-color);">안전 구조대원님, 훈련소에 오신 것을 환영합니다!</h2><br/>
-                        <div style="text-align: left; font-size: 1rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; padding: 0 20px;">
+                    html = `<h2 style="color:var(--primary-color);">안전 구조대원님, 훈련소에 오신 것을 환영합니다!</h2><br/>
+                        <div style="text-align: left; font-size: 1rem; line-height: 1.5;">
                             <p>구조 대원이 되려면 어떤 상황에서 어떻게 행동해야 하는지 잘 알아야 해요.</p>
                             <p>지금부터 30개의 문제를 해결하고 진짜 안전 박사가 되어보세요!</p><br/>
-                            <p><strong>🎮 훈련 방법</strong><br/>
-                            1. 문제 풀기: 화면에 나오는 문제를 읽고, O 또는 X를 선택해 주세요!<br/>
-                            2. 해설 보기: O X 버튼을 누르면 정답과 함께 해설이 나와요. 정답을 맞혀도, 해설을 꼭 읽어보고 기억하세요!<br/>
-                            3. 다음 훈련: 해설 아래에 있는 [다음 문제] 버튼을 누르면 다음 문제로 넘어갑니다.</p><br/>
-                            <p><strong>🎯 훈련 목표</strong><br/>
-                            총 30개의 미션을 모두 완수해서 정답률 100%에 도전하세요!<br/>
-                            30개의 훈련이 끝나면 나의 최종 점수와 실력을 확인할 수 있어요.</p><br/>
-                            <p><strong>🔥 콤보 팡팡!</strong><br/>
-                            문제를 연속으로 맞히면 '콤보'가 쌓여요!<br/>
-                            10콤보, 20콤보를 달성하면 화면이 바뀐다는데...! 30콤보까지 도전해 볼까요?</p>
+                            <p><strong>🎮 훈련 방법</strong><br/>1. 문제 풀기: 화면에 나오는 문제를 읽고, O 또는 X를 선택해 주세요!<br/>2. 해설 보기: O X 버튼을 누르면 정답과 함께 해설이 나와요. 정답을 맞혀도, 해설을 꼭 읽어보고 기억하세요!<br/>3. 다음 훈련: 해설 아래에 있는 [다음 문제] 버튼을 누르면 다음 문제로 넘어갑니다.</p><br/>
+                            <p><strong>🎯 훈련 목표</strong><br/>총 30개의 미션을 모두 완수해서 정답률 100%에 도전하세요!<br/>30개의 훈련이 끝나면 나의 최종 점수와 실력을 확인할 수 있어요.</p><br/>
+                            <p><strong>🔥 콤보 팡팡!</strong><br/>문제를 연속으로 맞히면 '콤보'가 쌓여요!<br/>10콤보, 20콤보를 달성하면 화면이 바뀐다는데...! 30콤보까지 도전해 볼까요?</p>
                         </div><br/>
-                        <button class="btn btn-primary" style="margin: 0 auto; width: 150px;" onclick="app.hideModal()">닫기</button>
-                    `;
+                        <button class="btn btn-primary" style="margin: 0 auto; width: 150px;" onclick="app.hideModal()">닫기</button>`;
                 } else if (type === 'race-desc') {
                     const closeText = isIngame ? '이어서 진행하기' : '출동 준비 완료!';
-                    html = `
-                        <h2 style="color:var(--primary-color);">🚨 구조 대원님, 긴급 출동하세요!</h2><br/>
-                        <div style="text-align: left; font-size: 1rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; padding: 0 20px;">
-                            <p><strong>📖 우리의 임무 📖</strong><br/>
-                            구조 대원님들, 긴급 출동하세요! 지금 우리 마을에 지진이 일어나 시민들이 대피소로 가지 못하고 고립되었어요.<br/>
-[구조 대원 1]과 [구조 대원 2], 두 분 중 누가 먼저 시민들을 위한 안전한 대피로를 연결할 수 있을까요?<br/>
-퀴즈를 맞혀 대피로를 하나씩 설치하세요.<br/>
-가로, 세로, 대각선 상관없이 먼저 대피로 5개를 연결하는 구조 대원이 시민들을 구하는 최후의 승자가 됩니다!<br/>
-지금 서둘러 출동하세요!!</p><br/>
-                            <p><strong>🎮 게임 진행 방법 🎮</strong><br/>
-                            1. 퀴즈 풀기: 오른쪽 카드를 눌러서 퀴즈를 확인하세요. 10초 안에 O 또는 X 버튼을 눌러야 해요!<br/>
-                            2. 해설 확인: 정답을 맞히면 문제 해설이 나와요. 해설을 꼭 읽고 [대피로 설치하기] 버튼을 누르세요.<br/>
-                            3. 대피로 설치: 20초 안에 왼쪽 게임판에서 내가 원하는 칸을 눌러 대피로를 설치하세요.<br/>
-                            - 다른 구조대원이 설치한 칸에는 대피로를 설치할 수 없어요.<br/>
-                            4. 아참, 문제를 틀리면 대피로를 설치할 수 없어요! 다음 구조 대원에게 차례가 넘어가요.</p><br/>
-                            <p><strong>⚠️ 재난 발생! 특수 카드 사용법 ⚠️</strong><br/>
-                            게임 도중에 지진 및 해일이 발생하거나 화산이 터질 수 있어요!<br/>
-20초 안에 선택하지 않으면 자동으로 랜덤 선택되니 조심하세요!</p><br/>
-                            <p>🪨 <strong>지진이 발생했습니다</strong> 🪨<br/>
-                            칸 하나를 누르면, 그 칸이 속한 가로 줄에 있는 모든 대피로가 파괴돼요!</p><br/>
-                            <p>🌊 <strong>해일이 발생했습니다</strong> 🌊<br/>
-                            칸 하나를 누르면, 그 칸이 속한 세로 줄에 있는 모든 대피로가 파도에 휩쓸려 사라져요!</p><br/>
-                            <p>🌋 <strong>화산이 폭발했습니다</strong> 🌋<br/>
-                            십자 모양(+)의 딱 정가운데 칸을 선택하세요. 그 칸과 상·하·좌·우 칸까지 총 5칸의 대피로가 사라져요!</p>
+                    html = `<h2 style="color:var(--primary-color);">🚨 구조 대원님, 긴급 출동하세요!</h2><br/>
+                        <div style="text-align: left; font-size: 1rem; line-height: 1.5;">
+                            <p><strong>📖 우리의 임무 📖</strong><br/>"구조 대원님들, 긴급 출동하세요! 지금 우리 마을에 지진이 일어나 시민들이 대피소로 가지 못하고 고립되었어요. [구조 대원 1]과 [구조 대원 2], 두 분 중 누가 먼저 시민들을 위한 안전한 대피로를 연결할 수 있을까요? 퀴즈를 맞혀 대피로를 하나씩 설치하세요. 가로, 세로, 대각선 상관없이 먼저 대피로 5개를 연결하는 구조 대원이 시민들을 구하는 최후의 승자가 됩니다! 지금 서둘러 출동하세요!!"</p><br/>
+                            <p><strong>🎮 게임 진행 방법 🎮</strong><br/>1. 퀴즈 풀기: 오른쪽 카드를 눌러서 퀴즈를 확인하세요. 10초 안에 O 또는 X 버튼을 눌러야 해요!<br/>2. 해설 확인: 정답을 맞히면 문제 해설이 나와요. 해설을 꼭 읽고 [대피로 설치하기] 버튼을 누르세요.<br/>3. 대피로 설치: 20초 안에 왼쪽 게임판에서 내가 원하는 칸을 눌러 대피로를 설치하세요.<br/>- 다른 구조대원이 설치한 칸에는 대피로를 설치할 수 없어요.<br/>4. 아참, 문제를 틀리면 대피로를 설치할 수 없어요! 다음 구조 대원에게 차례가 넘어가요.</p><br/>
+                            <p><strong>⚠️ 재난 발생! 특수 카드 사용법 ⚠️</strong><br/>게임 도중에 지진 및 해일이 발생하거나 화산이 터질 수 있어요! 20초 안에 선택하지 않으면 자동으로 랜덤 선택되니 조심하세요!</p><br/>
+                            <p>🪨 <strong>지진이 발생했습니다</strong> 🪨<br/>칸 하나를 누르면, 그 칸이 속한 가로 줄에 있는 모든 대피로가 파괴돼요!</p><br/>
+                            <p>🌊 <strong>해일이 발생했습니다</strong> 🌊<br/>칸 하나를 누르면, 그 칸이 속한 세로 줄에 있는 모든 대피로가 파도에 휩쓸려 사라져요!</p><br/>
+                            <p>🌋 <strong>화산이 폭발했습니다</strong> 🌋<br/>십자 모양(+)의 딱 정가운데 칸을 선택하세요. 그 칸과 상·하·좌·우 칸까지 총 5칸의 대피로가 사라져요!</p>
                         </div><br/>
-                        <button class="btn btn-primary" style="margin: 0 auto; width: 200px;" onclick="app.hideModal()">${closeText}</button>
-                    `;
+                        <button class="btn btn-primary" style="margin: 0 auto; width: 200px;" onclick="app.hideModal()">${closeText}</button>`;
                 } else if (type === 'race-mode-select') {
-                    html = `
-                        <h2 style="font-size:2rem; color:var(--primary-color);">게임 모드 선택</h2><br/>
+                    html = `<h2 style="font-size:2rem; color:var(--primary-color);">게임 모드 선택</h2><br/>
                         <div style="display:flex; justify-content:center; gap: 30px; align-items: stretch; text-align:center;">
                             <div style="flex:1.5; border: 3px solid var(--primary-color); padding: 20px; border-radius:15px; background: #fafafa; display:flex; flex-direction:column; justify-content:center;">
                                 <h3 style="margin-bottom: 20px; color: var(--text-main);">1인 모드 (AI와 대결)</h3>
@@ -353,27 +257,18 @@
                             </div>
                             <div style="flex:1; border: 3px solid var(--primary-color); padding: 20px; border-radius:15px; background: #fafafa; display:flex; flex-direction:column; justify-content:center;">
                                 <h3 style="margin-bottom: 20px; color: var(--text-main);">2인 모드 (친구와 대결)</h3>
-                                <div style="height: 50px;">
-                                    <button class="btn btn-outline" style="width:100%; height:100%; font-size: 1.2rem; border-width:3px; border-radius:10px;" onclick="app.startRace('2P', null)">2인 플레이</button>
-                                </div>
+                                <div style="height: 50px;"><button class="btn btn-outline" style="width:100%; height:100%; font-size: 1.2rem; border-width:3px; border-radius:10px;" onclick="app.startRace('2P', null)">2인 플레이</button></div>
                             </div>
-                        </div><br/>
-                        <button class="btn btn-outline" style="border:none; color:gray; margin:0 auto;" onclick="app.hideModal()">취소</button>
-                    `;
+                        </div><br/><button class="btn btn-outline" style="border:none; color:gray; margin:0 auto;" onclick="app.hideModal()">취소</button>`;
                 }
-                content.innerHTML = html;
-                overlay.classList.remove('hidden');
+                content.innerHTML = html; overlay.classList.remove('hidden');
             },
             hideModal() { document.getElementById('modal-overlay').classList.add('hidden'); },
             startQuiz() { this.hideModal(); this.switchScreen('screen-quiz'); if (window.quizMode) window.quizMode.start(); },
             startRace(mode, difficulty) { this.hideModal(); this.switchScreen('screen-race'); if (window.raceMode) window.raceMode.start(mode, difficulty); },
             goHome() { this.hideModal(); this.switchScreen('screen-home'); }
         };
-        window.onload = () => { app.init(); };
 
-        // ==========================================
-        // 3. quiz.js 내용
-        // ==========================================
         window.quizMode = {
             questions: [], currentIndex: 0, combo: 0, score: 0, wrongAnswers: [],
             start() {
@@ -390,74 +285,65 @@
                 const progressPercent = (progressCount / this.questions.length) * 100;
                 
                 container.innerHTML = `
-                    <div class="quiz-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
-                        <h2 style="color: var(--primary-color);">재난안전 O/X 퀴즈</h2>
-                        <button class="btn btn-outline" onclick="app.goHome()">처음으로 돌아가기</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:10px;">
+                        <h2 style="color: var(--primary-color); font-size:1.5rem;">재난안전 O/X 퀴즈</h2>
+                        <button class="btn btn-outline" style="padding: 5px 15px;" onclick="app.goHome()">처음으로 돌아가기</button>
                     </div>
-                    <div style="padding: 0 20px;">
+                    <div>
                         <div class="progress-bar-container"><div class="progress-bar-fill ${isResultVisible ? 'fast' : ''}" style="width: ${progressPercent}%;" id="quiz-progress-fill"></div></div>
-                        <div class="progress" style="text-align: center; color: var(--text-light); margin-bottom: 10px; font-weight:bold;">진행률: ${this.currentIndex + 1} / ${this.questions.length}</div>
+                        <div style="text-align: center; color: var(--text-light); margin: 5px 0; font-weight:bold;">진행률: ${this.currentIndex + 1} / ${this.questions.length}</div>
                     </div>
-                    <div style="height:40px;">
-                        ${this.combo > 0 ? `<div class="combo-text" style="text-align: center; font-size: 1.5rem; font-weight: 900; color: #ff9800; animation: pop 0.3s ease;">🔥 ${this.combo}연속 정답!</div>` : `<div class="combo-text" style="display:none; text-align: center; font-size: 1.5rem; font-weight: 900; color: #ff9800; animation: pop 0.3s ease;"></div>`}
+                    <div style="height:35px;">
+                        ${this.combo > 0 ? `<div class="combo-text" style="text-align: center; font-size: 1.2rem; font-weight: 900; color: #ff9800; animation: pop 0.3s ease;">🔥 ${this.combo}연속 정답!</div>` : `<div class="combo-text" style="display:none; text-align: center; font-size: 1.2rem; font-weight: 900; color: #ff9800;"></div>`}
                     </div>
-                    <div class="quiz-body" style="text-align: center; padding: 0 20px;">
-                        <h1 style="font-size: 1.8rem; margin-bottom: 30px; line-height: 1.4;">${q.q}</h1>
-                        <div class="ox-buttons" style="display: flex; flex-direction: column; gap: 15px; max-width: 300px; margin: 0 auto;">
-                            <button class="btn-ox btn-o" onclick="quizMode.selectAnswer('O')" style="background-color: var(--o-color); color: var(--white); font-size: 2rem; padding: 15px; border: none; border-radius: 15px; cursor: pointer; font-weight: 900;">O</button>
-                            <button class="btn-ox btn-x" onclick="quizMode.selectAnswer('X')" style="background-color: var(--x-color); color: var(--white); font-size: 2rem; padding: 15px; border: none; border-radius: 15px; cursor: pointer; font-weight: 900;">X</button>
+                    <div class="quiz-body">
+                        <h1>${q.q}</h1>
+                        <div class="ox-buttons">
+                            <button class="btn-o" onclick="quizMode.selectAnswer('O')">O</button>
+                            <button class="btn-x" onclick="quizMode.selectAnswer('X')">X</button>
                         </div>
-                        <div id="quiz-result-area" style="margin-top: 20px; min-height: 120px; opacity: 0; transition: opacity 0.5s;"></div>
-                    </div>
-                `;
+                        <div id="quiz-result-area" style="opacity: 0; transition: opacity 0.5s;"></div>
+                    </div>`;
             },
             selectAnswer(ans) {
                 const q = this.questions[this.currentIndex];
                 const isCorrect = (q.a === ans);
-                document.querySelectorAll('.btn-ox').forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; });
+                document.querySelectorAll('.ox-buttons button').forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; });
                 const clickedBtn = ans === 'O' ? document.querySelector('.btn-o') : document.querySelector('.btn-x');
-                clickedBtn.style.transform = 'scale(1.1)'; clickedBtn.style.opacity = '1';
+                clickedBtn.style.transform = 'scale(1.05)'; clickedBtn.style.opacity = '1';
+                
                 const resultArea = document.getElementById('quiz-result-area');
                 let resultHtml = '';
                 
                 if (isCorrect) {
                     this.combo++; this.score++;
-                    resultHtml = `<h3 style="color: var(--p2-color); margin-bottom: 10px;">🎉 정답입니다!</h3><p style="font-size: 1.4rem; font-weight: 900; color: var(--text-main); line-height: 1.5; background: rgba(255,255,255,0.8); padding: 15px; border-radius:10px; display:inline-block; border: 2px solid var(--primary-color);">${q.exp}</p>`;
-                    this.triggerConfetti();
+                    resultHtml = `<h3 style="color: var(--p2-color); margin-bottom: 5px;">🎉 정답입니다!</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--primary-color);">${q.exp}</p>`;
+                    if ([10, 20, 30].includes(this.combo)) {
+                        confetti({ particleCount: this.combo*10, spread: 100, origin: { y: 0.6 }, colors: this.combo === 10 ? ['#C0C0C0', '#ffffff', '#808080'] : undefined, scalar: 1.3 });
+                    }
                 } else {
                     this.combo = 0; this.wrongAnswers.push(q);
-                    resultHtml = `<h3 style="color: var(--p1-color); margin-bottom: 10px;">❌ 오답입니다.</h3><p style="font-size: 1.4rem; font-weight: 900; color: var(--text-main); line-height: 1.5; background: rgba(255,255,255,0.8); padding: 15px; border-radius:10px; display:inline-block; border: 2px solid var(--p1-color);">${q.exp}</p>`;
+                    resultHtml = `<h3 style="color: var(--p1-color); margin-bottom: 5px;">❌ 오답입니다.</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--p1-color);">${q.exp}</p>`;
                 }
-                const isLast = (this.currentIndex === this.questions.length - 1);
-                const nextBtnText = isLast ? '훈련 결과 확인하기' : '다음 문제 ➔';
-                resultHtml += `<br/><div style="display:flex; justify-content:center; margin-top:20px;"><button class="btn btn-primary" onclick="quizMode.nextQuestion()" style="font-size: 1.1rem; padding: 10px 40px;">${nextBtnText}</button></div>`;
+                const nextBtnText = (this.currentIndex === this.questions.length - 1) ? '훈련 결과 확인하기' : '다음 문제 ➔';
+                resultHtml += `<div style="display:flex; justify-content:center; margin-top:10px;"><button class="btn btn-primary" onclick="quizMode.nextQuestion()">${nextBtnText}</button></div>`;
                 resultArea.innerHTML = resultHtml; resultArea.style.opacity = '1';
+                
                 const comboEl = document.querySelector('.combo-text');
                 if(isCorrect && comboEl) { comboEl.innerText = `🔥 ${this.combo}연속 정답!`; comboEl.style.display = 'block'; } else if (comboEl) { comboEl.style.display = 'none'; }
-                const progressPercent = ((this.currentIndex + 1) / this.questions.length) * 100;
-                document.getElementById('quiz-progress-fill').style.width = progressPercent + '%';
-            },
-            triggerConfetti() {
-                if (this.combo === 10 || this.combo === 20 || this.combo === 30) {
-                    const colors = this.combo === 10 ? ['#C0C0C0', '#ffffff', '#808080'] : (this.combo === 20 ? ['#FFD700', '#FFA500', '#FFFF00'] : undefined);
-                    const particleCount = this.combo === 10 ? 200 : (this.combo === 20 ? 300 : 500);
-                    confetti({ particleCount: particleCount, spread: 100, origin: { y: 0.6 }, colors: colors, scalar: 1.3 });
-                }
+                document.getElementById('quiz-progress-fill').style.width = (((this.currentIndex + 1) / this.questions.length) * 100) + '%';
             },
             nextQuestion() { this.currentIndex++; this.render(); },
             renderResult(container) {
                 if(this.score === this.questions.length) { confetti({ particleCount: 500, spread: 120, origin: { y: 0.5 }, scalar: 1.5 }); }
                 let wrongHtml = '';
                 if (this.wrongAnswers.length > 0) {
-                    wrongHtml = `<div style="margin-top: 30px; text-align: left; max-width: 600px; width: 100%; max-height: 40vh; overflow-y: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><h3 style="color: var(--primary-color); margin-bottom: 15px;">오답 노트</h3><ul style="list-style: none; padding: 0;">${this.wrongAnswers.map(q => `<li style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;"><strong>Q: ${q.q}</strong><br/><span style="color: var(--p1-color); font-weight:bold;">A: ${q.a}</span><br/><span style="color: #666; font-size: 0.9rem;">${q.exp}</span></li>`).join('')}</ul></div>`;
+                    wrongHtml = `<div style="margin-top: 20px; text-align: left; max-width: 600px; width: 100%; max-height: 40vh; overflow-y: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><h3 style="color: var(--primary-color); margin-bottom: 10px;">오답 노트</h3><ul style="list-style: none; padding: 0;">${this.wrongAnswers.map(q => `<li style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;"><strong>Q: ${q.q}</strong><br/><span style="color: var(--p1-color); font-weight:bold;">A: ${q.a}</span><br/><span style="color: #666; font-size: 0.9rem;">${q.exp}</span></li>`).join('')}</ul></div>`;
                 }
-                container.innerHTML = `<div style="height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 20px;"><h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px;">훈련 완료!</h1><h2 style="font-size: 1.5rem; margin-bottom: 20px;">맞힌 문제: ${this.score} / ${this.questions.length}</h2><button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 40px;" onclick="app.goHome()">처음으로 돌아가기</button>${wrongHtml}</div>`;
+                container.innerHTML = `<div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content:center; text-align: center;"><h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px;">훈련 완료!</h1><h2 style="font-size: 1.5rem; margin-bottom: 20px;">맞힌 문제: ${this.score} / ${this.questions.length}</h2><button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 40px;" onclick="app.goHome()">처음으로 돌아가기</button>${wrongHtml}</div>`;
             }
         };
 
-        // ==========================================
-        // 4. race.js 내용
-        // ==========================================
         window.raceMode = {
             mode: '1P', difficulty: 'normal', board: [], currentPlayer: 1, state: 'DRAW_CARD', timer: null, timeLeft: 0, currentCard: null, deck: [], wrongList: {1: [], 2: []}, hoveredSpecialCells: [], isAnimating: false,
             start(mode, difficulty) {
@@ -476,34 +362,31 @@
             render() {
                 const container = document.getElementById('race-container');
                 container.innerHTML = `
-                    <div style="display:flex; width:100%; height:100%; padding: 10px; gap: 20px; justify-content:center; align-items:center;">
-                        <div id="board-area" style="height: calc(100vh - 40px); aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                            <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 5px;"><h2 style="color:var(--primary-color); margin:0;">구조 레이스: 대피로를 연결하라!</h2></div>
-                            <div id="board-grid" style="display: grid; grid-template-columns: 30px repeat(12, 1fr); grid-template-rows: 30px repeat(12, 1fr); width: 100%; height: 100%; background: #fff; border: 2px solid #000;">
+                    <div style="display:flex; width:100%; align-items:center;">
+                        <div id="board-area">
+                            <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 5px;"><h2 style="color:var(--primary-color); font-size:1.5rem; margin:0;">구조 레이스: 대피로를 연결하라!</h2></div>
+                            <div id="board-grid" style="display: grid; grid-template-columns: 30px repeat(12, 1fr); grid-template-rows: 30px repeat(12, 1fr); background: #fff; border: 2px solid #000;">
                                 ${this.generateBoardHTML()}
                             </div>
                             <div id="board-popup" class="hidden" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 15px; font-size: 1.5rem; font-weight: bold; text-align: center; pointer-events: none; transition: opacity 0.3s; z-index: 10;"></div>
                         </div>
-                        <div id="ui-area" style="height: calc(100vh - 40px); width: 400px; display: flex; flex-direction: column; gap: 10px; position:relative;">
+                        <div id="ui-area">
                             ${(this.mode === '1P' && this.currentPlayer === 2) ? `<div style="position:absolute; top:0;left:0;right:0;bottom:0; z-index:50;"></div>` : ''}
-                            <div style="display:flex; justify-content:flex-end; gap: 10px; position:relative; z-index:60;">
+                            <div style="display:flex; justify-content:flex-end; gap: 10px; margin-bottom: 5px; z-index:60;">
                                 <button class="btn btn-outline" style="padding: 5px 15px; font-size:0.9rem;" onclick="app.showModal('race-desc', true)">게임 규칙</button>
                                 <button class="btn btn-outline" style="padding: 5px 15px; font-size:0.9rem;" onclick="raceMode.confirmExit()">게임 종료</button>
                             </div>
-                            <div id="card-area" style="flex: 1; border: 3px dashed var(--primary-color); border-radius: 15px; display:flex; flex-direction:column; background: #fff; padding: 15px; position:relative; overflow:hidden;">
-                                <div style="display: flex; gap: 10px; margin-bottom: 15px; height: 50px; flex-shrink:0;">
-                                    <div id="p1-status" style="flex:1; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===1 ? 'var(--p1-color)' : 'transparent'}; border-radius: 10px; background: rgba(255,107,107,0.1);"><h3 style="color: var(--p1-color); margin:0; font-size:1.1rem;">구조대원 1</h3></div>
-                                    <div id="p2-status" style="flex:1; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===2 ? 'var(--p2-color)' : 'transparent'}; border-radius: 10px; background: rgba(77,150,255,0.1);"><h3 style="color: var(--p2-color); margin:0; font-size:1.1rem;">${this.mode==='1P' ? 'AI' : '구조대원 2'}</h3></div>
+                            <div id="card-area" style="flex: 1; border: 3px dashed var(--primary-color); border-radius: 15px; background: #fff; position:relative; overflow:hidden;">
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-shrink:0;">
+                                    <div id="p1-status" style="flex:1; padding:10px 0; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===1 ? 'var(--p1-color)' : 'transparent'}; border-radius: 10px; background: rgba(255,107,107,0.1);"><h3 style="color: var(--p1-color); margin:0;">구조대원 1</h3></div>
+                                    <div id="p2-status" style="flex:1; padding:10px 0; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===2 ? 'var(--p2-color)' : 'transparent'}; border-radius: 10px; background: rgba(77,150,255,0.1);"><h3 style="color: var(--p2-color); margin:0;">${this.mode==='1P' ? 'AI' : '구조대원 2'}</h3></div>
                                 </div>
-                                <div style="flex: 1; display:flex; justify-content:center; align-items:center; width:100%;">
-                                    <div style="width:100%; max-height:100%; aspect-ratio:3/4; display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; padding:10px;">
-                                        ${this.renderCardArea()}
-                                    </div>
+                                <div style="flex: 1; display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; text-align:center;">
+                                    ${this.renderCardArea()}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 const cells = document.querySelectorAll('.board-cell');
                 cells.forEach(cell => { cell.addEventListener('mouseover', (e) => this.handleHover(e)); cell.addEventListener('mouseout', (e) => this.handleHoverOut(e)); cell.addEventListener('click', (e) => this.handleClick(e)); cell.addEventListener('touchstart', (e) => { e.preventDefault(); this.handleClick(e); }, {passive: false}); });
                 if (this.mode === '1P' && this.currentPlayer === 2 && this.state === 'DRAW_CARD') { setTimeout(() => this.drawCard(), 2000); }
@@ -526,32 +409,26 @@
             },
             renderCardArea() {
                 const canClick = this.currentPlayer === 1 || this.mode === '2P';
-                
-                // 카드 이미지 디자인(card.png) 연동
                 if (this.state === 'DRAW_CARD') {
-                    return `
-                        <div style="width: 100%; height: 100%; cursor: pointer; display:flex; justify-content:center; align-items:center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="${canClick ? 'raceMode.drawCard()' : ''}">
-                            <img src="card.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" alt="카드 뽑기">
-                        </div>`;
+                    return `<img src="card.png" style="width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; cursor:pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="${canClick ? 'raceMode.drawCard()' : ''}" alt="카드 뽑기">`;
                 }
-
                 const maxTime = this.state === 'QUIZ' ? 10 : 20; const percent = (this.timeLeft / maxTime) * 100;
                 let progressHTML = '';
-                if(this.state !== 'QUIZ_RESULT' && this.state !== 'DRAW_CARD') { progressHTML = `<div style="display:flex; width:100%; align-items:center; gap: 10px; margin-bottom: 15px;"><div class="progress-bar-container" style="flex:1; height: 15px;"><div class="progress-bar-fill" style="width: ${percent}%; background-color: ${this.timeLeft <= 3 ? 'red' : 'var(--primary-color)'};"></div></div><span style="font-weight:bold; color:${this.timeLeft <= 3 ? 'red' : 'var(--text-main)'}; min-width: 40px; text-align:right;">${this.timeLeft}초</span></div>`; }
+                if(this.state !== 'QUIZ_RESULT' && this.state !== 'DRAW_CARD') { progressHTML = `<div style="display:flex; width:100%; align-items:center; gap: 10px; margin-bottom: 10px;"><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${percent}%; background-color: ${this.timeLeft <= 3 ? 'red' : 'var(--primary-color)'};"></div></div><span style="font-weight:bold; color:${this.timeLeft <= 3 ? 'red' : 'var(--text-main)'};">${this.timeLeft}초</span></div>`; }
                 
-                if (this.state === 'QUIZ') return `${progressHTML}<div style="text-align:center; font-size: 1.2rem; font-weight:bold; margin-bottom: 20px; line-height:1.4;">${this.currentCard.q}</div><div style="display:flex; gap: 10px; width: 100%;"><button id="btn-ox-o" class="btn btn-ox-race" onclick="raceMode.answerQuiz('O')" style="flex:1; padding: 20px; font-size:2rem; background: var(--o-color); color:white; border:none; border-radius:10px; cursor:pointer;">O</button><button id="btn-ox-x" class="btn btn-ox-race" onclick="raceMode.answerQuiz('X')" style="flex:1; padding: 20px; font-size:2rem; background: var(--x-color); color:white; border:none; border-radius:10px; cursor:pointer;">X</button></div>`;
+                if (this.state === 'QUIZ') return `${progressHTML}<div class="race-quiz-q">${this.currentCard.q}</div><div style="display:flex; gap: 10px; width: 100%;"><button id="btn-ox-o" class="btn-ox-race" style="flex:1; background: var(--o-color); color:white; border-radius:10px;" onclick="raceMode.answerQuiz('O')">O</button><button id="btn-ox-x" class="btn-ox-race" style="flex:1; background: var(--x-color); color:white; border-radius:10px;" onclick="raceMode.answerQuiz('X')">X</button></div>`;
                 
                 if (this.state === 'QUIZ_RESULT') {
-                    if (this.currentCard.isCorrect) return `<h3 style="color: var(--p2-color); margin-bottom: 15px; font-size: 1.5rem;">🎉 정답입니다!</h3><p style="font-size: 1rem; color: #555; text-align:center; margin-bottom: 30px; line-height: 1.4; font-weight:bold;">${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.startPlacement()" style="font-size:1.2rem; width:100%; padding:15px;">대피로 연결하기</button>`;
-                    else return `<h3 style="color: var(--p1-color); margin-bottom: 5px; font-size: 1.5rem;">❌ 오답입니다.</h3><div style="font-size: 1.2rem; color: var(--text-main); font-weight:bold; margin-bottom: 20px;">대피로를 연결할 수 없습니다.</div><p style="font-size: 1rem; color: #555; text-align:center; margin-bottom: 30px; line-height: 1.4; font-weight:bold;">${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.nextTurn()" style="font-size:1.2rem; width:100%; padding:15px;">다음 차례로 넘어가기</button>`;
+                    if (this.currentCard.isCorrect) return `<h3 style="color: var(--p2-color);">🎉 정답입니다!</h3><p>${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.startPlacement()" style="width:100%;">대피로 연결하기</button>`;
+                    else return `<h3 style="color: var(--p1-color);">❌ 오답입니다.</h3><div style="font-weight:bold; margin-bottom:10px;">대피로를 연결할 수 없습니다.</div><p>${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.nextTurn()" style="width:100%;">다음 차례로</button>`;
                 }
-                if (this.state === 'PLACEMENT') return `${progressHTML}<h3 style="margin-bottom: 15px; font-size:1.5rem; color:var(--primary-color);">대피로 연결 단계</h3><p style="font-size: 1.1rem; line-height:1.4; text-align:center; font-weight:bold;">보드판의 빈 칸을 눌러 대피로를 설치하세요!</p>`;
+                if (this.state === 'PLACEMENT') return `${progressHTML}<h3 style="color:var(--primary-color);">대피로 연결 단계</h3><p>보드판의 빈 칸을 눌러 대피로를 설치하세요!</p>`;
                 if (this.state === 'SPECIAL') {
                     let title = '', emoji = '';
                     if (this.currentCard.type === 'EARTHQUAKE') { title = "지진 발생!"; emoji = "🪨"; }
                     if (this.currentCard.type === 'TSUNAMI') { title = "해일 발생!"; emoji = "🌊"; }
                     if (this.currentCard.type === 'VOLCANO') { title = "화산 폭발!"; emoji = "🌋"; }
-                    return `${progressHTML}<h3 style="color: red; margin-bottom: 15px; font-size:1.8rem; font-weight:900;">${emoji} ${title} ${emoji}</h3><p style="font-size: 1.1rem; line-height:1.4; text-align:center; font-weight:bold;">${this.currentCard.desc}</p>`;
+                    return `${progressHTML}<h3 style="color: red; font-weight:900;">${emoji} ${title} ${emoji}</h3><p style="font-weight:bold;">${this.currentCard.desc}</p>`;
                 }
                 return '';
             },
@@ -670,77 +547,27 @@
                 if (this.checkWin(r, c)) { this.render(); setTimeout(() => this.showEndGame(this.currentPlayer), 1000); } else { this.nextTurn(); }
             },
             handleSpecialTimeout() { const r = Math.floor(Math.random() * 12), c = Math.floor(Math.random() * 12); this.applySpecial(r, c, true); },
-            
-            // 귀여운 재난 이펙트 연출 함수
             triggerVisualEffect(type) {
                 const body = document.body;
                 if (type === 'EARTHQUAKE') { 
-                    const container = document.getElementById('race-container'); 
-                    container.classList.add('fx-earthquake'); 
-                    
-                    const dropInterval = setInterval(() => {
-                        const el = document.createElement('div');
-                        const isRock = Math.random() > 0.3;
-                        el.innerText = isRock ? '🪨' : '💨';
-                        el.className = isRock ? 'rock-emoji' : 'dust-emoji';
-                        el.style.left = (Math.random() * 90 + 5) + 'vw';
-                        if(!isRock) el.style.top = (Math.random() * 80 + 10) + 'vh';
-                        body.appendChild(el);
-                        setTimeout(() => el.remove(), 1500);
-                    }, 100);
-
-                    setTimeout(() => { 
-                        container.classList.remove('fx-earthquake'); 
-                        clearInterval(dropInterval);
-                    }, 3000); 
+                    const container = document.getElementById('race-container'); container.classList.add('fx-earthquake'); 
+                    const dropInterval = setInterval(() => { const el = document.createElement('div'); const isRock = Math.random() > 0.3; el.innerText = isRock ? '🪨' : '💨'; el.className = isRock ? 'rock-emoji' : 'dust-emoji'; el.style.left = (Math.random() * 90 + 5) + 'vw'; if(!isRock) el.style.top = (Math.random() * 80 + 10) + 'vh'; body.appendChild(el); setTimeout(() => el.remove(), 1500); }, 100);
+                    setTimeout(() => { container.classList.remove('fx-earthquake'); clearInterval(dropInterval); }, 3000); 
                 } 
-                else if (type === 'TSUNAMI') { 
-                    const waveDiv = document.createElement('div');
-                    waveDiv.className = 'wave-container';
-                    for(let i=0; i<15; i++) {
-                        const w = document.createElement('div');
-                        w.innerText = '🌊';
-                        w.style.transform = `scale(${1 + Math.random()}) translateY(${Math.random() * 60}px)`;
-                        waveDiv.appendChild(w);
-                    }
-                    body.appendChild(waveDiv);
-                    setTimeout(() => waveDiv.remove(), 3000); 
-                } 
-                else if (type === 'VOLCANO') { 
-                    const volDiv = document.createElement('div'); 
-                    volDiv.className = 'volcano-container'; 
-                    volDiv.innerHTML = '<div style="font-size: 15rem;">🌋</div>';
-                    
-                    for(let i=0; i<30; i++) {
-                        const ash = document.createElement('div');
-                        ash.className = 'ash-emoji';
-                        ash.innerText = Math.random() > 0.5 ? '💨' : '🌑';
-                        ash.style.setProperty('--dx', (Math.random() * 80 - 40) + 'vw');
-                        ash.style.animationDelay = (Math.random() * 1.5) + 's';
-                        volDiv.appendChild(ash);
-                    }
-                    body.appendChild(volDiv); 
-                    setTimeout(() => volDiv.remove(), 3000); 
-                }
+                else if (type === 'TSUNAMI') { const waveDiv = document.createElement('div'); waveDiv.className = 'wave-container'; for(let i=0; i<15; i++) { const w = document.createElement('div'); w.innerText = '🌊'; w.style.transform = `scale(${1 + Math.random()}) translateY(${Math.random() * 60}px)`; waveDiv.appendChild(w); } body.appendChild(waveDiv); setTimeout(() => waveDiv.remove(), 3000); } 
+                else if (type === 'VOLCANO') { const volDiv = document.createElement('div'); volDiv.className = 'volcano-container'; volDiv.innerHTML = '<div style="font-size: 15rem;">🌋</div>'; for(let i=0; i<30; i++) { const ash = document.createElement('div'); ash.className = 'ash-emoji'; ash.innerText = Math.random() > 0.5 ? '💨' : '🌑'; ash.style.setProperty('--dx', (Math.random() * 80 - 40) + 'vw'); ash.style.animationDelay = (Math.random() * 1.5) + 's'; volDiv.appendChild(ash); } body.appendChild(volDiv); setTimeout(() => volDiv.remove(), 3000); }
             },
-
             applySpecial(r, c, isRandom) {
                 clearInterval(this.timer); this.isAnimating = true;
                 this.hoveredSpecialCells.forEach(el => { el.removeAttribute('data-hoveredSpecial'); el.style.boxShadow = ""; el.style.backgroundColor = ""; });
                 this.hoveredSpecialCells = [];
                 const type = this.currentCard.type; let targetCells = [], msg = "";
-                
-                // 이펙트 즉시 실행 (3초 지속)
                 this.triggerVisualEffect(type);
-
                 if (type === 'EARTHQUAKE') { for (let i = 0; i < 12; i++) targetCells.push({r, c: i}); msg = `가로 ${r+1} 지역 대피로 파괴!`; } 
                 else if (type === 'TSUNAMI') { for (let i = 0; i < 12; i++) targetCells.push({r: i, c}); msg = `세로 ${['A','B','C','D','E','F','G','H','I','J','K','L'][c]} 지역 대피로 파괴!`; } 
                 else if (type === 'VOLCANO') { targetCells.push({r, c}); if (r>0) targetCells.push({r:r-1, c}); if (r<11) targetCells.push({r:r+1, c}); if (c>0) targetCells.push({r, c:c-1}); if (c<11) targetCells.push({r, c:c+1}); msg = `${['A','B','C','D','E','F','G','H','I','J','K','L'][c] + (r + 1)} 주변 대피로 파괴!`; }
-                
                 targetCells.forEach(cell => { const el = document.querySelector(`.board-cell[data-r="${cell.r}"][data-c="${cell.c}"]`); if(el) { el.style.backgroundColor = 'rgba(0,0,0,0.1)'; el.style.transition = 'background-color 3s'; } });
-                
                 this.showPopup((isRandom ? "[시간 초과] " : "") + msg);
-                
                 setTimeout(() => { targetCells.forEach(cell => { this.board[cell.r][cell.c] = 0; }); targetCells.forEach(cell => { const el = document.querySelector(`.board-cell[data-r="${cell.r}"][data-c="${cell.c}"]`); if(el) { el.style.backgroundColor = ''; el.style.transition = ''; } }); this.isAnimating = false; this.nextTurn(); }, 3000);
             },
             checkWin(r, c) {
@@ -758,7 +585,7 @@
             showEndGame(winner) {
                 clearInterval(this.timer); const name = winner === 1 ? '구조대원 1' : (this.mode === '1P' ? 'AI' : '구조대원 2'); const color = winner === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
                 const overlay = document.getElementById('modal-overlay'), content = document.getElementById('modal-content');
-                content.innerHTML = `<h2 style="margin-bottom:10px; font-size: 2rem;"><span style="color:${color};">${name}</span>이(가) 먼저 대피로를 연결하였습니다.</h2><h3 style="margin-bottom:30px; font-size: 1.5rem; color:var(--primary-color);">시민들이 안전하게 대피했습니다! 🚁</h3><div class="btn-group-vertical" style="max-width: 400px; margin: 0 auto; gap: 15px;"><button class="btn btn-primary" style="padding: 15px;" onclick="raceMode.showReview()">이번 게임에서 틀린 문제 다시 보기</button><button class="btn btn-outline" style="padding: 15px;" onclick="app.goHome()">처음으로 돌아가기</button></div>`;
+                content.innerHTML = `<h2 style="margin-bottom:10px; font-size: 2rem;"><span style="color:${color};">${name}</span>이(가) 먼저 대피로를 연결하였습니다.</h2><h3 style="margin-bottom:30px; font-size: 1.5rem; color:var(--primary-color);">시민들이 안전하게 대피했습니다! 🚁</h3><div style="display:flex; flex-direction:column; max-width: 400px; margin: 0 auto; gap: 15px;"><button class="btn btn-primary" style="padding: 15px;" onclick="raceMode.showReview()">이번 게임에서 틀린 문제 다시 보기</button><button class="btn btn-outline" style="padding: 15px;" onclick="app.goHome()">처음으로 돌아가기</button></div>`;
                 overlay.classList.remove('hidden');
             },
             showReview() {
@@ -771,11 +598,13 @@
             switchTab(player) { document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active')); document.getElementById(`tab-btn-${player}`).classList.add('active'); document.getElementById(`tab-content-${player}`).classList.add('active'); },
             confirmExit() {
                 let savedTime = this.timeLeft; clearInterval(this.timer);
-                document.getElementById('modal-content').innerHTML = `<h2 style="margin-bottom: 20px; color:var(--primary-color);">정말로 게임을 종료하시겠습니까?</h2><div class="btn-group-vertical" style="justify-content:center; align-items:center; max-width: 300px; margin: 0 auto; gap: 15px;"><button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="app.goHome()">네</button><button class="btn btn-outline" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="raceMode.resumeGame(${savedTime})">아니오</button></div>`;
+                document.getElementById('modal-content').innerHTML = `<h2 style="margin-bottom: 20px; color:var(--primary-color);">정말로 게임을 종료하시겠습니까?</h2><div style="display:flex; flex-direction:column; justify-content:center; align-items:center; max-width: 300px; margin: 0 auto; gap: 15px;"><button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="app.goHome()">네</button><button class="btn btn-outline" style="width: 100%; padding: 15px; font-size: 1.2rem;" onclick="raceMode.resumeGame(${savedTime})">아니오</button></div>`;
                 document.getElementById('modal-overlay').classList.remove('hidden');
             },
             resumeGame(savedTime) { app.hideModal(); if (['QUIZ', 'PLACEMENT', 'SPECIAL'].includes(this.state)) { this.startTimer(savedTime, () => { if(this.state === 'QUIZ') this.handleQuizTimeout(); else if (this.state === 'SPECIAL') this.handleSpecialTimeout(); else { this.showPopup("시간 초과! 대피로를 연결할 수 없습니다."); setTimeout(() => this.nextTurn(), 2000); } }); } }
         };
+
+        window.onload = () => { app.init(); };
     </script>
 </body>
 </html>
