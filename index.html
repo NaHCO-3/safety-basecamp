@@ -137,6 +137,46 @@
         .menu-circle p { font-size: 0.85rem !important; margin-bottom: 10px !important; }
         .btn { padding: 8px 15px !important; font-size: 0.9rem !important; }
     }
+/* 5. 가로 모드 (스마트폰 눕혔을 때 오른쪽 카드 잘림 방지) */
+    @media (max-height: 600px) {
+        /* 레이스 전체 여백 줄이기 */
+        #race-container > div {
+            padding: 5px !important;
+            gap: 10px !important;
+        }
+        /* 보드판 높이 최적화 */
+        #board-area {
+            height: calc(100vh - 15px) !important;
+        }
+        /* 오른쪽 UI 영역: 너비를 줄이고, 넘치면 스크롤 가능하게 처리 */
+        #ui-area {
+            width: 280px !important;
+            height: calc(100vh - 15px) !important;
+            overflow-y: auto !important;
+        }
+        /* 카드 내부 패딩 및 마진 축소 */
+        #card-area {
+            padding: 10px !important;
+        }
+        /* 구조대원 이름표 크기 축소 */
+        #p1-status, #p2-status {
+            height: 35px !important;
+        }
+        #p1-status h3, #p2-status h3 {
+            font-size: 0.9rem !important;
+        }
+        /* O/X 버튼 크기 대폭 축소하여 화면에 쏙 들어가게 조절 */
+        .btn-ox-race {
+            padding: 10px !important;
+            font-size: 1.5rem !important;
+        }
+        /* 퀴즈 문제 텍스트 크기 및 여백 조절 */
+        #card-area div[style*="font-size: 1.2rem"] {
+            font-size: 0.95rem !important;
+            margin-bottom: 10px !important;
+            line-height: 1.2 !important;
+        }
+    }
     </style>
 </head>
 <body>
