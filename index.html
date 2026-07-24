@@ -19,20 +19,50 @@
             --p2-color: #4D96FF;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* 1. 한국어 띄어쓰기 단위 줄바꿈 적용 (단어 중간에 안 잘림) */
+        * { box-sizing: border-box; margin: 0; padding: 0; word-break: keep-all; }
         
-        /* 1. 기본 데스크톱 설정 (스크롤 금지) */
-        body, html { font-family: 'Noto Sans KR', sans-serif; background-color: #FDFDF8; overflow: hidden; width: 100vw; height: 100vh; }
-        #app-container { width: 100vw; height: 100vh; position: relative; display: flex; justify-content: center; align-items: center; }
-        .screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; flex-direction: column; padding: 20px; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        /* 2. 스크롤 전면 허용 (어떤 기기에서든 잘리면 스크롤 가능) */
+        body, html { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: #FDFDF8; 
+            overflow-y: auto; /* 숨김 해제, 세로 스크롤 허용 */
+            overflow-x: hidden;
+            width: 100%; 
+            min-height: 100vh; 
+        }
+        
+        #app-container { width: 100%; min-height: 100vh; position: relative; display: flex; justify-content: center; align-items: center; }
+        .screen { width: 100%; min-height: 100vh; position: absolute; top: 0; left: 0; display: none; flex-direction: column; padding: 20px; opacity: 0; transition: opacity 0.4s ease-in-out; overflow-y: auto; }
         .screen.active { display: flex; opacity: 1; }
 
-        /* 2. 홈 화면 설정 */
-        #screen-home { background-image: url('background.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; display: none; justify-content: center; align-items: center; }
+        /* 홈 화면 배경 */
+        #screen-home { background-image: url('background.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; display: none; justify-content: center; align-items: center; padding: 40px 10px; }
         #screen-home.active { display: flex; }
-        .home-content { display: flex; justify-content: center; align-items: center; gap: 30px; width: 100%; }
         
-        .menu-circle { width: 300px; height: 300px; background: rgba(255, 255, 255, 0.95); border: 5px solid var(--primary-color); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.2s ease; }
+        /* 3. 직렬 3개 배치 유지 (wrap 금지) */
+        .home-content { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 30px; width: 100%; flex-wrap: nowrap; }
+        
+        /* 4. 동그라미 크기 및 호버링 확대 효과 복구 */
+        .menu-circle { 
+            width: 340px; /* 버튼이 삐져나오지 않도록 원 크기 확대 */
+            height: 340px; 
+            background: rgba(255, 255, 255, 0.95); 
+            border: 5px solid var(--primary-color); 
+            border-radius: 50%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center; 
+            padding: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* 호버 애니메이션 추가 */
+        }
+        
+        /* 마우스 호버 시 원 커지는 효과 복구 */
+        .menu-circle:hover { transform: scale(1.05); box-shadow: 0 15px 40px rgba(26,35,126,0.4); }
+
         .menu-circle h2 { font-size: 2.2rem; color: var(--primary-color); font-weight: 900; margin-bottom: 10px; letter-spacing: -0.05em; text-shadow: none; }
         .menu-circle .emoji { font-size: 3rem; margin-bottom: 10px; }
         .menu-circle p { font-size: 1.1rem; color: #333; font-weight: 700; margin-bottom: 15px; }
@@ -45,26 +75,21 @@
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-box { background: white; padding: 30px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; border: 4px solid var(--primary-color); text-align: center; }
 
-        /* 프로그레스 바 */
         .progress-bar-container { flex: 1; height: 12px; background-color: #e0e0e0; border-radius: 6px; overflow: hidden; }
         .progress-bar-fill { height: 100%; background-color: var(--primary-color); transition: width 1s linear, background-color 0.3s; }
         
-        /* 탭 */
         .tab-header { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 10px; cursor: pointer; text-align: center; font-weight: bold; color: gray; }
         .tab-btn.active { border-bottom: 4px solid var(--primary-color); color: var(--primary-color); }
         .tab-content { display: none; text-align: left; max-height: 40vh; overflow-y: auto; }
         .tab-content.active { display: block; }
-        ul { padding-left: 20px; } li { margin-bottom: 15px; }
+        ul { padding-left: 20px; } li { margin-bottom: 15px; line-height: 1.4; }
 
-        /* ========================================================
-           3. O/X 퀴즈 & 구조 레이스 (데스크톱 기본 디자인 복구)
-           ======================================================== */
+        /* O/X 퀴즈 & 구조 레이스 버튼 (데스크톱 기본 디자인 유지) */
         .btn-ox { padding: 15px; font-size: 2rem; font-weight: 900; border-radius: 15px; cursor: pointer; border: none; transition: all 0.2s; }
         .btn-o { background-color: var(--o-color); color: var(--white); }
         .btn-x { background-color: var(--x-color); color: var(--white); }
         
-        /* 퀴즈 & 레이스 O/X 버튼 진한 색상 변경 (요청사항 반영) */
         .btn-o:not(:disabled):hover, .btn-o:not(:disabled):active { background-color: #FF3B30 !important; transform: scale(1.05); }
         .btn-x:not(:disabled):hover, .btn-x:not(:disabled):active { background-color: #007AFF !important; transform: scale(1.05); }
         .btn-ox-race:not(:disabled):hover, .btn-ox-race.ai-hover { background-color: #000 !important; }
@@ -72,49 +97,40 @@
         .btn-ox-race#btn-ox-x:not(:disabled):hover, .btn-ox-race#btn-ox-x.ai-hover { background-color: #007AFF !important; color: white !important; }
 
         /* ========================================================
-           📱 4. 태블릿 & 스마트폰 전용 맞춤형 (여기서만 화면 축소)
+           📱 태블릿 & 스마트폰 가로 모드 (직렬 유지하되 크기만 축소)
            ======================================================== */
-        @media (max-width: 1024px), (max-height: 700px) {
-            /* 홈 화면 스크롤 허용 및 줄바꿈 */
-            #screen-home { align-items: flex-start !important; overflow-y: auto !important; padding-top: 20px; }
-            .home-content { flex-wrap: wrap !important; align-items: flex-start !important; }
-            .menu-circle { transform: scale(0.9); margin: -10px; }
-
-            /* 게임 중에는 스크롤 완벽 차단 */
-            body, html { overflow: hidden !important; }
-
-            /* 퀴즈 화면 자동 축소 (가로 배치로 전환) */
-            .ox-buttons { flex-direction: row !important; max-width: 100% !important; justify-content: center !important; }
-            .ox-buttons button { flex: 1 !important; padding: 15px !important; font-size: 1.8rem !important; }
-            .quiz-question-text { font-size: 1.4rem !important; margin-bottom: 15px !important; }
+        @media (max-width: 1024px) {
+            .home-content { gap: 15px; }
+            .menu-circle { width: 240px; height: 240px; padding: 10px; border-width: 4px; }
+            .menu-circle h2 { font-size: 1.5rem; margin-bottom: 5px; }
+            .menu-circle .emoji { font-size: 2rem; margin-bottom: 5px; }
+            .menu-circle p { font-size: 0.9rem; margin-bottom: 10px; }
+            .btn { padding: 8px 12px; font-size: 0.9rem; }
+            .btn-group-vertical { gap: 5px !important; }
             
-            /* 구조 레이스 자동 축소 */
+            /* 게임 레이아웃 조절 */
             #ui-area { width: 300px !important; }
             .btn-ox-race { padding: 10px !important; font-size: 1.5rem !important; }
-            #card-area h3 { font-size: 1.2rem !important; margin-bottom: 5px !important; }
-            #card-area p, .race-quiz-q { font-size: 1rem !important; margin-bottom: 10px !important; line-height: 1.3 !important; }
-            .race-title { font-size: 1.2rem !important; }
         }
 
-        /* 스마트폰 가로 모드 (더 극단적인 축소) */
+        /* 스마트폰 화면이 아주 좁을 때 (글씨가 버튼 밖으로 나가지 않게 최대한 축소) */
         @media (max-width: 768px), (max-height: 500px) {
-            .menu-circle { transform: scale(0.7); margin: -30px; }
+            .home-content { gap: 10px; }
+            .menu-circle { width: 190px; height: 190px; padding: 10px; border-width: 3px; }
+            .menu-circle h2 { font-size: 1.2rem; margin-bottom: 5px; }
+            .menu-circle .emoji { font-size: 1.5rem; margin-bottom: 0px; }
+            .menu-circle p { display: none; /* 공간 확보를 위해 작은 설명글 숨김 */ } 
+            .btn { padding: 5px 10px; font-size: 0.8rem; }
             
-            /* 퀴즈 글씨/버튼 더 축소 */
-            .quiz-question-text { font-size: 1.1rem !important; line-height: 1.3 !important; margin-bottom: 10px !important; }
+            /* 퀴즈 글씨/버튼 축소 */
+            .quiz-question-text { font-size: 1.2rem !important; margin-bottom: 10px !important; }
+            .ox-buttons { flex-direction: row !important; }
             .ox-buttons button { padding: 10px !important; font-size: 1.3rem !important; }
-            #quiz-result-area { min-height: auto !important; }
-            #quiz-result-area p { font-size: 1rem !important; padding: 10px !important; margin: 0 !important; }
             
-            /* 구조 레이스 완전히 우겨넣기 */
+            /* 구조 레이스 */
             #race-layout { gap: 10px !important; padding: 5px !important; }
-            #board-area { height: calc(100vh - 10px) !important; }
-            #ui-area { width: 220px !important; height: calc(100vh - 10px) !important; }
-            #card-area { padding: 10px !important; }
-            .btn-ox-race { font-size: 1.2rem !important; padding: 5px !important; }
-            .race-quiz-q { font-size: 0.85rem !important; line-height: 1.2 !important; margin-bottom: 5px !important; }
-            #p1-status h3, #p2-status h3 { font-size: 0.9rem !important; }
-            #p1-status, #p2-status { padding: 5px 0 !important; height: auto !important; }
+            #ui-area { width: 220px !important; }
+            .race-quiz-q { font-size: 0.9rem !important; margin-bottom: 5px !important; }
         }
 
         /* 애니메이션 이펙트 */
@@ -214,6 +230,7 @@
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
                 document.getElementById(screenId).classList.add('active');
                 this.currentScreen = screenId.replace('screen-', '');
+                window.scrollTo(0, 0); // 화면 전환 시 맨 위로 스크롤
             },
             showModal(type, isIngame = false) {
                 const overlay = document.getElementById('modal-overlay');
@@ -281,7 +298,6 @@
                 const progressCount = isResultVisible ? this.currentIndex + 1 : this.currentIndex;
                 const progressPercent = (progressCount / this.questions.length) * 100;
                 
-                // 데스크톱 원본 형태를 기반으로 클래스만 지정 (CSS로 미디어 처리)
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
                         <h2 class="race-title" style="color: var(--primary-color);">재난안전 O/X 퀴즈</h2>
@@ -315,30 +331,32 @@
                 
                 if (isCorrect) {
                     this.combo++; this.score++;
-                    resultHtml = `<h3 style="color: var(--p2-color); margin-bottom: 5px;">🎉 정답입니다!</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--primary-color);">${q.exp}</p>`;
+                    // 5. 해설 글씨체 확대 (font-size: 1.3rem, padding 등 조절)
+                    resultHtml = `<h3 style="color: var(--p2-color); margin-bottom: 10px;">🎉 정답입니다!</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--primary-color); font-size: 1.3rem; padding: 15px; line-height: 1.5; text-align: center;">${q.exp}</p>`;
                     if ([10, 20, 30].includes(this.combo)) {
                         confetti({ particleCount: this.combo*10, spread: 100, origin: { y: 0.6 }, colors: this.combo === 10 ? ['#C0C0C0', '#ffffff', '#808080'] : undefined, scalar: 1.3 });
                     }
                 } else {
                     this.combo = 0; this.wrongAnswers.push(q);
-                    resultHtml = `<h3 style="color: var(--p1-color); margin-bottom: 5px;">❌ 오답입니다.</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--p1-color);">${q.exp}</p>`;
+                    // 5. 해설 글씨체 확대
+                    resultHtml = `<h3 style="color: var(--p1-color); margin-bottom: 10px;">❌ 오답입니다.</h3><p style="font-weight: 900; color: var(--text-main); background: rgba(255,255,255,0.8); border-radius:10px; display:inline-block; border: 2px solid var(--p1-color); font-size: 1.3rem; padding: 15px; line-height: 1.5; text-align: center;">${q.exp}</p>`;
                 }
                 const nextBtnText = (this.currentIndex === this.questions.length - 1) ? '훈련 결과 확인하기' : '다음 문제 ➔';
-                resultHtml += `<div style="display:flex; justify-content:center; margin-top:10px;"><button class="btn btn-primary" onclick="quizMode.nextQuestion()">${nextBtnText}</button></div>`;
+                resultHtml += `<div style="display:flex; justify-content:center; margin-top:20px; padding-bottom: 30px;"><button class="btn btn-primary" onclick="quizMode.nextQuestion()">${nextBtnText}</button></div>`;
                 resultArea.innerHTML = resultHtml; resultArea.style.opacity = '1';
                 
                 const comboEl = document.querySelector('.combo-text');
                 if(isCorrect && comboEl) { comboEl.innerText = `🔥 ${this.combo}연속 정답!`; comboEl.style.display = 'block'; } else if (comboEl) { comboEl.style.display = 'none'; }
                 document.getElementById('quiz-progress-fill').style.width = (((this.currentIndex + 1) / this.questions.length) * 100) + '%';
             },
-            nextQuestion() { this.currentIndex++; this.render(); },
+            nextQuestion() { this.currentIndex++; this.render(); window.scrollTo(0, 0); },
             renderResult(container) {
                 if(this.score === this.questions.length) { confetti({ particleCount: 500, spread: 120, origin: { y: 0.5 }, scalar: 1.5 }); }
                 let wrongHtml = '';
                 if (this.wrongAnswers.length > 0) {
-                    wrongHtml = `<div style="margin-top: 20px; text-align: left; max-width: 600px; width: 100%; max-height: 40vh; overflow-y: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><h3 style="color: var(--primary-color); margin-bottom: 10px;">오답 노트</h3><ul style="list-style: none; padding: 0;">${this.wrongAnswers.map(q => `<li style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;"><strong>Q: ${q.q}</strong><br/><span style="color: var(--p1-color); font-weight:bold;">A: ${q.a}</span><br/><span style="color: #666; font-size: 0.9rem;">${q.exp}</span></li>`).join('')}</ul></div>`;
+                    wrongHtml = `<div style="margin-top: 20px; text-align: left; max-width: 600px; width: 100%; max-height: 40vh; overflow-y: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><h3 style="color: var(--primary-color); margin-bottom: 10px;">오답 노트</h3><ul style="list-style: none; padding: 0;">${this.wrongAnswers.map(q => `<li style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;"><strong>Q: ${q.q}</strong><br/><span style="color: var(--p1-color); font-weight:bold;">A: ${q.a}</span><br/><span style="color: #666; font-size: 1rem; line-height:1.4;">${q.exp}</span></li>`).join('')}</ul></div>`;
                 }
-                container.innerHTML = `<div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content:center; text-align: center;"><h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px;">훈련 완료!</h1><h2 style="font-size: 1.5rem; margin-bottom: 20px;">맞힌 문제: ${this.score} / ${this.questions.length}</h2><button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 40px;" onclick="app.goHome()">처음으로 돌아가기</button>${wrongHtml}</div>`;
+                container.innerHTML = `<div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content:center; text-align: center; padding-bottom: 50px;"><h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 10px;">훈련 완료!</h1><h2 style="font-size: 1.5rem; margin-bottom: 20px;">맞힌 문제: ${this.score} / ${this.questions.length}</h2><button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 40px;" onclick="app.goHome()">처음으로 돌아가기</button>${wrongHtml}</div>`;
             }
         };
 
@@ -359,23 +377,22 @@
             },
             render() {
                 const container = document.getElementById('race-container');
-                // 데스크톱 원본 UI 
                 container.innerHTML = `
-                    <div id="race-layout" style="display:flex; width:100%; height:100%; padding: 10px; gap: 20px; justify-content:center; align-items:center;">
-                        <div id="board-area" style="height: calc(100vh - 40px); aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; position: relative;">
+                    <div id="race-layout" style="display:flex; width:100%; min-height: 100vh; padding: 10px; gap: 20px; justify-content:center; align-items:flex-start; flex-wrap: wrap;">
+                        <div id="board-area" style="width: 100%; max-width: 600px; aspect-ratio: 1/1; display: flex; flex-direction: column; align-items: center; position: relative;">
                             <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 5px;"><h2 class="race-title" style="color:var(--primary-color); margin:0;">구조 레이스: 대피로를 연결하라!</h2></div>
                             <div id="board-grid" style="display: grid; grid-template-columns: 30px repeat(12, 1fr); grid-template-rows: 30px repeat(12, 1fr); width: 100%; height: 100%; background: #fff; border: 2px solid #000;">
                                 ${this.generateBoardHTML()}
                             </div>
                             <div id="board-popup" class="hidden" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 15px; font-size: 1.5rem; font-weight: bold; text-align: center; pointer-events: none; transition: opacity 0.3s; z-index: 10;"></div>
                         </div>
-                        <div id="ui-area" style="height: calc(100vh - 40px); width: 400px; display: flex; flex-direction: column; gap: 10px; position:relative;">
+                        <div id="ui-area" style="width: 100%; max-width: 400px; min-height: 500px; display: flex; flex-direction: column; gap: 10px; position:relative;">
                             ${(this.mode === '1P' && this.currentPlayer === 2) ? `<div style="position:absolute; top:0;left:0;right:0;bottom:0; z-index:50;"></div>` : ''}
                             <div style="display:flex; justify-content:flex-end; gap: 10px; margin-bottom: 5px; z-index:60;">
                                 <button class="btn btn-outline" style="padding: 5px 15px; font-size:0.9rem;" onclick="app.showModal('race-desc', true)">게임 규칙</button>
                                 <button class="btn btn-outline" style="padding: 5px 15px; font-size:0.9rem;" onclick="raceMode.confirmExit()">게임 종료</button>
                             </div>
-                            <div id="card-area" style="flex: 1; border: 3px dashed var(--primary-color); border-radius: 15px; background: #fff; position:relative; overflow:hidden; display:flex; flex-direction:column; padding:15px;">
+                            <div id="card-area" style="flex: 1; border: 3px dashed var(--primary-color); border-radius: 15px; background: #fff; position:relative; display:flex; flex-direction:column; padding:15px; min-height: 400px;">
                                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-shrink:0;">
                                     <div id="p1-status" style="flex:1; padding:10px 0; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===1 ? 'var(--p1-color)' : 'transparent'}; border-radius: 10px; background: rgba(255,107,107,0.1);"><h3 style="color: var(--p1-color); margin:0;">구조대원 1</h3></div>
                                     <div id="p2-status" style="flex:1; padding:10px 0; display:flex; align-items:center; justify-content:center; border: 3px solid ${this.currentPlayer===2 ? 'var(--p2-color)' : 'transparent'}; border-radius: 10px; background: rgba(77,150,255,0.1);"><h3 style="color: var(--p2-color); margin:0;">${this.mode==='1P' ? 'AI' : '구조대원 2'}</h3></div>
@@ -418,8 +435,8 @@
                 if (this.state === 'QUIZ') return `${progressHTML}<div class="race-quiz-q" style="font-size:1.2rem; margin-bottom:20px;">${this.currentCard.q}</div><div style="display:flex; gap: 10px; width: 100%;"><button id="btn-ox-o" class="btn-ox-race" style="flex:1; background: var(--o-color); color:white; border-radius:10px; padding:20px; font-size:2rem;" onclick="raceMode.answerQuiz('O')">O</button><button id="btn-ox-x" class="btn-ox-race" style="flex:1; background: var(--x-color); color:white; border-radius:10px; padding:20px; font-size:2rem;" onclick="raceMode.answerQuiz('X')">X</button></div>`;
                 
                 if (this.state === 'QUIZ_RESULT') {
-                    if (this.currentCard.isCorrect) return `<h3 style="color: var(--p2-color);">🎉 정답입니다!</h3><p>${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.startPlacement()" style="width:100%;">대피로 연결하기</button>`;
-                    else return `<h3 style="color: var(--p1-color);">❌ 오답입니다.</h3><div style="font-weight:bold; margin-bottom:10px;">대피로를 연결할 수 없습니다.</div><p>${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.nextTurn()" style="width:100%;">다음 차례로</button>`;
+                    if (this.currentCard.isCorrect) return `<h3 style="color: var(--p2-color); margin-bottom:10px;">🎉 정답입니다!</h3><p style="font-size:1.1rem; line-height:1.4;">${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.startPlacement()" style="width:100%; margin-top:20px;">대피로 연결하기</button>`;
+                    else return `<h3 style="color: var(--p1-color); margin-bottom:10px;">❌ 오답입니다.</h3><div style="font-weight:bold; margin-bottom:10px;">대피로를 연결할 수 없습니다.</div><p style="font-size:1.1rem; line-height:1.4;">${this.currentCard.exp}</p><button class="btn btn-primary" onclick="raceMode.nextTurn()" style="width:100%; margin-top:20px;">다음 차례로</button>`;
                 }
                 if (this.state === 'PLACEMENT') return `${progressHTML}<h3 style="color:var(--primary-color);">대피로 연결 단계</h3><p>보드판의 빈 칸을 눌러 대피로를 설치하세요!</p>`;
                 if (this.state === 'SPECIAL') {
@@ -427,7 +444,7 @@
                     if (this.currentCard.type === 'EARTHQUAKE') { title = "지진 발생!"; emoji = "🪨"; }
                     if (this.currentCard.type === 'TSUNAMI') { title = "해일 발생!"; emoji = "🌊"; }
                     if (this.currentCard.type === 'VOLCANO') { title = "화산 폭발!"; emoji = "🌋"; }
-                    return `${progressHTML}<h3 style="color: red; font-weight:900;">${emoji} ${title} ${emoji}</h3><p style="font-weight:bold;">${this.currentCard.desc}</p>`;
+                    return `${progressHTML}<h3 style="color: red; font-weight:900; margin-bottom:10px;">${emoji} ${title} ${emoji}</h3><p style="font-weight:bold; line-height:1.4;">${this.currentCard.desc}</p>`;
                 }
                 return '';
             },
