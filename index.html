@@ -19,10 +19,10 @@
             --p2-color: #4D96FF;
         }
 
-        /* 1. 한국어 띄어쓰기 단위 줄바꿈 적용 */
+        /* 띄어쓰기 단위 줄바꿈 적용 */
         * { box-sizing: border-box; margin: 0; padding: 0; word-break: keep-all; }
         
-        /* 2. 스크롤 허용 설정 */
+        /* 스크롤 허용 설정 */
         body, html { 
             font-family: 'Noto Sans KR', sans-serif; 
             background-color: #FDFDF8; 
@@ -66,11 +66,29 @@
         .menu-circle .emoji { font-size: 3rem; margin-bottom: 10px; }
         .menu-circle p { font-size: 1.1rem; color: #333; font-weight: 700; margin-bottom: 15px; }
         
-        /* 요청 1: 컴퓨터 접속시 초기 화면 버튼이 원 안에 완벽히 들어오도록 크기/너비 조정 */
+        /* 버튼 공통 스타일 (기본 최대 너비 제한) */
         .btn { padding: 8px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 0.95rem; width: 100%; max-width: 140px; }
         .btn-primary { background-color: var(--primary-color); color: var(--white); }
         .btn-outline { background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); }
         
+        /* 퀴즈 상단 타이틀 줄바꿈 방지 클래스 */
+        .quiz-header-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin: 0;
+            white-space: nowrap; /* 줄바꿈 절대 방지 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 퀴즈 상단 종료 버튼 컴팩트 스타일 */
+        .quiz-exit-btn {
+            max-width: 140px !important;
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+            flex-shrink: 0;
+        }
+
         .hidden { display: none !important; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-box { background: white; padding: 30px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; border: 4px solid var(--primary-color); text-align: center; }
@@ -108,7 +126,10 @@
             .btn { padding: 6px 10px; font-size: 0.8rem; max-width: 110px; }
             .btn-group-vertical { gap: 5px !important; }
             
-            /* 요청 2: 휴대폰 접속시 OX 문제 버튼 크기 키우고, 가운데 대칭 직렬 배치 */
+            /* 모바일 퀴즈 타이틀 글자 크기 축소 (한 줄 유지 목적) */
+            .quiz-header-title { font-size: 1.2rem !important; }
+
+            /* 휴대폰 접속시 OX 문제 버튼 크기 키우고 대칭 직렬 배치 */
             .ox-buttons {
                 display: flex !important;
                 flex-direction: row !important;
@@ -126,7 +147,7 @@
                 padding: 0 !important;
             }
 
-            /* 요청 3: 구조레이스 한 화면에 게임판과 상태창이 다 담기도록 축소 및 가로 정렬 */
+            /* 구조레이스 한 화면 배치 */
             #race-layout {
                 flex-direction: row !important;
                 flex-wrap: nowrap !important;
@@ -175,6 +196,7 @@
             .menu-circle p { display: none; } 
             .btn { padding: 5px 8px; font-size: 0.75rem; max-width: 95px; }
             
+            .quiz-header-title { font-size: 1rem !important; }
             .quiz-question-text { font-size: 1.2rem !important; margin-bottom: 10px !important; }
             .ox-buttons button { height: 60px !important; font-size: 2rem !important; }
             
@@ -363,9 +385,9 @@
                 const progressPercent = (progressCount / this.questions.length) * 100;
                 
                 container.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
-                        <h2 class="race-title" style="color: var(--primary-color);">재난안전 O/X 퀴즈</h2>
-                        <button class="btn btn-outline" style="max-width:none;" onclick="app.goHome()">처음으로 돌아가기</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; gap: 10px;">
+                        <h2 class="quiz-header-title">재난안전 O/X 퀴즈</h2>
+                        <button class="btn btn-outline quiz-exit-btn" onclick="app.goHome()">처음으로</button>
                     </div>
                     <div style="padding: 0 20px;">
                         <div class="progress-bar-container"><div class="progress-bar-fill ${isResultVisible ? 'fast' : ''}" style="width: ${progressPercent}%;" id="quiz-progress-fill"></div></div>
